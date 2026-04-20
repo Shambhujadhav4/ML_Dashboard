@@ -1,0 +1,63 @@
+# -----------------------------
+# OS / Editor
+# -----------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -----------------------------
+# Python
+# -----------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# -----------------------------
+# Node / Next.js
+# -----------------------------
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -----------------------------
+# Environment / Secrets
+# -----------------------------
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# -----------------------------
+# Build and runtime logs
+# -----------------------------
+*.log
+website/frontend/build.log
+website/frontend/build-text.log
+
+# -----------------------------
+# Local artifacts
+# -----------------------------
+*.pid
+*.seed
+*.tmp
+*.temp
+
+# Personal local datasets (do not push)
+healthcare_real_time_dataset.csv
+diabetes_patient_health_data (3).csv
+test-data/
