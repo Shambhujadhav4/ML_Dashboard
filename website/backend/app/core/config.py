@@ -11,15 +11,29 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
 
+def _split_origins(value: str) -> list[str]:
+    origins: list[str] = []
+    for raw_origin in value.split(","):
+        origin = raw_origin.strip().rstrip("/")
+        if origin:
+            origins.append(origin)
+    return origins
+
+
 @dataclass(slots=True)
 class Settings:
     app_name: str = "DataPilot API"
     api_prefix: str = "/api"
     cors_origins: list[str] = field(
-        default_factory=lambda: os.getenv(
-            "DATAPILOT_CORS_ORIGINS",
-            "http://localhost:3000,http://127.0.0.1:3000",
-        ).split(",")
+        default_factory=lambda: _split_origins(
+            os.getenv(
+                "DATAPILOT_CORS_ORIGINS",
+                "http://localhost:3000,http://127.0.0.1:3000",
+            )
+        )
+    )
+    cors_origin_regex: str = os.getenv(
+        "DATAPILOT_CORS_ORIGIN_REGEX", r"https://.*\.vercel\.app"
     )
 
 
