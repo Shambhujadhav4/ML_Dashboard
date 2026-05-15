@@ -15,15 +15,18 @@ from app.services.visualization_service import visualization_service
 router = APIRouter(prefix="/train", tags=["train"])
 
 
+from app.core.executor import run_in_process
+
 @router.post("", response_model=ProjectSnapshot)
-def train_model(request: TrainRequest) -> ProjectSnapshot:
+async def train_model(request: TrainRequest) -> ProjectSnapshot:
     try:
         session = dataset_store.get_project(request.project_id)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     try:
-        session = training_service.train(session, request)
+        # Run training in a background thread so it doesn't block FastAPI
+        session = await run_in_process(training_service.train, session, request)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

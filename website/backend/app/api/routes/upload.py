@@ -70,6 +70,11 @@ def _create_session_from_upload(
     return dataset_store.build_summary(session)
 
 
+from app.core.executor import run_in_process
+
+def _read_csv_sync(content_bytes, sep, encoding, header):
+    return pd.read_csv(io.BytesIO(content_bytes), sep=sep, encoding=encoding, header=header)
+
 @router.post("/csv", response_model=DatasetSummary)
 async def upload_csv(
     file: UploadFile = File(...),
@@ -83,12 +88,7 @@ async def upload_csv(
     content = await file.read()
     actual_separator = "\t" if separator == "\\t" else separator
     try:
-        dataframe = pd.read_csv(
-            io.BytesIO(content),
-            sep=actual_separator,
-            encoding=encoding,
-            header=header_row,
-        )
+        dataframe = await run_in_process(_read_csv_sync, content, actual_separator, encoding, header_row)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Unable to parse CSV: {exc}") from exc
 
@@ -118,17 +118,12 @@ async def upload_file(
     if input_kind == "csv":
         actual_separator = "\t" if separator == "\\t" else separator
         try:
-            dataframe = pd.read_csv(
-                io.BytesIO(content),
-                sep=actual_separator,
-                encoding=encoding,
-                header=header_row,
-            )
+            dataframe = await run_in_process(_read_csv_sync, content, actual_separator, encoding, header_row)
         except Exception as exc:
             raise HTTPException(status_code=400, detail=f"Unable to parse CSV: {exc}") from exc
         detected_kind = "csv"
     elif input_kind == "image":
-        dataframe = _build_image_frame(content, file.filename)
+        dataframe = await run_in_process(_build_image_frame, content, file.filename)
         detected_kind = "image"
     else:
         raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a CSV or image file.")
@@ -141,14 +136,7 @@ async def upload_file(
         file_size_bytes=len(content),
     )
 
-
-@router.get("/{project_id}/insights", response_model=DatasetInsights)
-def get_dataset_insights(project_id: str) -> DatasetInsights:
-    try:
-        session = dataset_store.get_project(project_id)
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-
+def _get_insights_sync(session):
     dataframe = session.processed_data
     column_info = [
         {
@@ -169,6 +157,16 @@ def get_dataset_insights(project_id: str) -> DatasetInsights:
         .rename(columns={"index": "column"})
         .to_dict(orient="records")
     )
+    return column_info, descriptive_statistics
+
+@router.get("/{project_id}/insights", response_model=DatasetInsights)
+async def get_dataset_insights(project_id: str) -> DatasetInsights:
+    try:
+        session = dataset_store.get_project(project_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    column_info, descriptive_statistics = await run_in_process(_get_insights_sync, session)
 
     return DatasetInsights(
         project_id=session.project_id,
@@ -179,7 +177,7 @@ def get_dataset_insights(project_id: str) -> DatasetInsights:
 
 
 @router.get("/{project_id}/workflow-recommendation", response_model=WorkflowRecommendation)
-def get_workflow_recommendation(
+async def get_workflow_recommendation(
     project_id: str,
     benchmark_metric: str | None = Query(default=None),
 ) -> WorkflowRecommendation:
@@ -188,7 +186,7 @@ def get_workflow_recommendation(
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    return recommendation_service.recommend(session, benchmark_metric=benchmark_metric)
+    return await run_in_process(recommendation_service.recommend, session, benchmark_metric)
 
 
 @router.get("/{project_id}", response_model=ProjectSnapshot)
