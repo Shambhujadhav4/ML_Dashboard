@@ -25,18 +25,24 @@ class VisualizationService:
     def available_categorical_columns(self, session: ProjectSession) -> list[str]:
         return session.processed_data.select_dtypes(include=["object", "category"]).columns.tolist()
 
+    def _get_plot_data(self, session: ProjectSession):
+        df = session.processed_data
+        if len(df) > 2000:
+            return df.sample(n=2000, random_state=42)
+        return df
+
     def build_missing_values_figure(
         self,
         session: ProjectSession,
     ) -> dict[str, Any] | None:
-        figure = DataVisualizer.plot_missing_values(session.processed_data)
+        figure = DataVisualizer.plot_missing_values(self._get_plot_data(session))
         return self._serialize_figure(figure)
 
     def build_correlation_figure(
         self,
         session: ProjectSession,
     ) -> dict[str, Any] | None:
-        figure = DataVisualizer.plot_correlation_heatmap(session.processed_data)
+        figure = DataVisualizer.plot_correlation_heatmap(self._get_plot_data(session))
         return self._serialize_figure(figure)
 
     def build_distribution_figure(
@@ -46,7 +52,7 @@ class VisualizationService:
     ) -> dict[str, Any] | None:
         if column not in session.processed_data.columns:
             return None
-        figure = DataVisualizer.plot_distribution(session.processed_data, column)
+        figure = DataVisualizer.plot_distribution(self._get_plot_data(session), column)
         return self._serialize_figure(figure)
 
     def build_boxplot_figure(
@@ -56,7 +62,7 @@ class VisualizationService:
     ) -> dict[str, Any] | None:
         if column not in session.processed_data.columns:
             return None
-        figure = DataVisualizer.plot_boxplot(session.processed_data, column)
+        figure = DataVisualizer.plot_boxplot(self._get_plot_data(session), column)
         return self._serialize_figure(figure)
 
     def build_countplot_figure(
@@ -66,7 +72,7 @@ class VisualizationService:
     ) -> dict[str, Any] | None:
         if column not in session.processed_data.columns:
             return None
-        figure = DataVisualizer.plot_countplot(session.processed_data, column)
+        figure = DataVisualizer.plot_countplot(self._get_plot_data(session), column)
         return self._serialize_figure(figure)
 
     def build_scatter_figure(
@@ -77,7 +83,7 @@ class VisualizationService:
         color_col: str | None = None,
     ) -> dict[str, Any] | None:
         figure = DataVisualizer.plot_scatter(
-            session.processed_data,
+            self._get_plot_data(session),
             x_col,
             y_col,
             color_col=color_col,

@@ -33,7 +33,9 @@ class TrainingService:
             character if character.isalnum() or character in {"-", "_"} else "-"
             for character in (session.model_trainer.model_name or "model")
         ).strip("-") or "model"
-        artifact_dir = Path(tempfile.gettempdir()) / "datapilot-artifacts" / session.project_id
+        # Store in the persistent models directory relative to project root
+        # In Docker this maps to /app/models
+        artifact_dir = Path("models") / session.project_id
         artifact_dir.mkdir(parents=True, exist_ok=True)
         return artifact_dir / f"{safe_model_name}.pkl"
 
