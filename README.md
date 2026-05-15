@@ -1,76 +1,112 @@
-# DataPilot
+# 🚀 DataPilot - ML Dashboard
 
-This repository now contains two separate projects:
+![DataPilot Cover](https://via.placeholder.com/1200x400/0f766e/ffffff?text=DataPilot+-+Automated+Machine+Learning+Platform)
 
-- [streamlit/](streamlit/) for the original Streamlit dashboard
-- [website/](website/) for the real web app built with FastAPI and Next.js
+A full-stack machine learning web application that enables users to upload datasets, perform automated preprocessing, train models, and get intelligent model recommendations. The application handles end-to-end ML workflows with a focus on user experience and automated decision-making.
 
-## Streamlit app
+---
 
-The Streamlit version lives in [streamlit/](streamlit/).
+## 🌟 Live Demo
 
-Run it from that folder:
+- **Frontend (Vercel):** [https://ml-dashboard-livid-pi.vercel.app](https://ml-dashboard-livid-pi.vercel.app)
+- **Backend (Render):** [https://ml-dashboard-vqs0.onrender.com](https://ml-dashboard-vqs0.onrender.com) *(Currently on Render, migrating to DigitalOcean VPS soon)*
 
-```bash
-cd streamlit
-pip install -r requirements.txt
-streamlit run app.py
+---
+
+## ✨ Key Features
+
+*   📊 **Automated Dataset Analysis:** Upload CSV/TSV files and get automatic task detection (classification vs. regression), data profiling, and target column recommendations.
+*   🧠 **Intelligent Model Recommendation:** Automatically benchmarks models (Random Forest, Gradient Boosting, Logistic/Linear Regression) using dual-metric evaluation (F1-weighted + Accuracy, or R²).
+*   🛠️ **Interactive Preprocessing Pipeline:** Visually handle missing values, encode categorical data, scale features, and detect/remove outliers before training.
+*   ⚙️ **Model Training & Artifacts:** Train models with configurable cross-validation and download the trained `.pkl` models for production use.
+*   📈 **Rich Visualizations:** Interactive Plotly charts including missing value heatmaps, feature distributions, confusion matrices, ROC curves, and feature importance.
+*   💾 **Session Management:** Secure, `localStorage`-based session persistence for managing multiple data science projects seamlessly.
+
+---
+
+## 💻 Technology Stack
+
+### Frontend
+- **Framework:** Next.js 15 (React 19, TypeScript)
+- **Styling:** Custom CSS with a sleek Dark Theme
+- **Visualization:** Plotly.js
+- **Deployment:** Vercel
+
+### Backend
+- **Framework:** FastAPI (Python 3.13)
+- **ML Core:** Scikit-learn, Pandas, NumPy
+- **Deployment:** Currently on Render (Planned migration to DigitalOcean VPS using Docker)
+
+---
+
+## 📂 Project Layout
+
+```text
+DataPilot/
+├── website/
+│   ├── backend/             # FastAPI application (ML Engine & API)
+│   │   ├── app/             # Routers, ML Services, and core logic
+│   │   └── requirements.txt # Python dependencies
+│   ├── frontend/            # Next.js application (User Interface)
+│   │   ├── app/             # App router pages (/upload, /training, etc.)
+│   │   ├── components/      # Reusable React components
+│   │   └── package.json     # Node dependencies
+│   ├── nginx/               # Nginx configuration for Docker deployment
+│   └── docker-compose.yml   # Production deployment config
+├── README.md                # Project documentation
+└── PROJECT_RESUME.md        # Detailed portfolio summary
 ```
 
-## Real website
+---
 
-The website lives in [website/](website/).
+## 🚀 How to Run Locally
 
-Backend:
+### Option 1: Manual Setup (Development)
 
+#### 1. Start the Backend
 ```bash
 cd website/backend
+python -m venv .venv
+
+# Activate the virtual environment:
+# On Windows:
+.venv\Scripts\activate
+# On macOS/Linux:
+source .venv/bin/activate
+
+# Install dependencies and run
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
+*Backend runs on `http://localhost:8000`*
 
-Frontend:
-
+#### 2. Start the Frontend
+Open a new terminal window:
 ```bash
 cd website/frontend
 npm install
+
+# Ensure you have the .env.local file setup:
+# echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api" > .env.local
+
 npm run dev
 ```
+*Frontend runs on `http://localhost:3000`*
 
-The frontend opens at http://localhost:3000 and talks to the backend at http://localhost:8000/api.
+---
 
-Startup checklist for the website:
+### Option 2: Using Docker
 
-1. Start backend first from `website/backend`.
-2. Confirm API health at http://localhost:8000/api/health.
-3. Ensure `website/frontend/.env.local` has `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api`.
-4. Start frontend from `website/frontend`.
-5. Open http://localhost:3000/upload and test CSV upload.
+You can run the backend and Nginx reverse proxy using Docker Compose:
 
-Website pages:
-
-- `/upload` - upload a CSV and inspect preview, columns, and descriptive stats
-- `/exploration` - histogram, box plot, correlation, scatter, and categorical charts
-- `/preprocessing` - drop columns, missing values, encoding, scaling, outliers
-- `/training` - model selection and training
-- `/results` - metrics, feature importance, and evaluation charts
-
-New file support:
-
-- The upload flow now accepts CSV and image files.
-- Image files are summarized as metadata rows for inspection.
-- Trained sklearn models are saved as downloadable `.pkl` artifacts from the results page.
-
-## Current layout
-
+```bash
+cd website
+docker-compose up --build
 ```
-DataPilot/
-├── README.md
-├── streamlit/
-│   ├── app.py
-│   ├── modules/
-│   └── requirements.txt
-└── website/
-	├── backend/
-	└── frontend/
-```
+This will expose the API on port `80` (via Nginx) and `8000` (directly from FastAPI). The frontend can still be run manually pointing to this API.
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
